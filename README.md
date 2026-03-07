@@ -2,6 +2,64 @@
 
 Production-grade Terraform module for deploying Azure Kubernetes Service (AKS) clusters with enterprise features including system/user node pools, workload identity, Azure CNI Overlay networking, Microsoft Defender, Azure Policy, and GitOps-ready configuration.
 
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph AKS["Azure Kubernetes Service"]
+        direction TB
+        CP[Control Plane - Private API]
+
+        subgraph SystemPool["System Node Pool"]
+            SN1[System Node AZ1]
+            SN2[System Node AZ2]
+            SN3[System Node AZ3]
+        end
+
+        subgraph UserPools["User Node Pools"]
+            UP1[General Purpose Pool]
+            UP2[GPU Pool - Spot]
+            UP3[Memory Optimized]
+        end
+    end
+
+    subgraph Network["Azure CNI Overlay + Cilium"]
+        VNET[Virtual Network]
+        SUBNET[AKS Subnet]
+        NSG[Network Security Group]
+    end
+
+    subgraph Security["Security"]
+        WI[Workload Identity + OIDC]
+        DEF[Microsoft Defender]
+        POL[Azure Policy]
+        KV[Key Vault CSI Driver]
+    end
+
+    subgraph Monitoring["Observability"]
+        LA[Log Analytics Workspace]
+        CI[Container Insights]
+        PROM[Managed Prometheus]
+    end
+
+    subgraph Registry["Container Registry"]
+        ACR[Azure Container Registry]
+    end
+
+    CP --> SystemPool
+    CP --> UserPools
+    AKS --> Network
+    AKS --> Security
+    AKS --> Monitoring
+    ACR -->|Pull| AKS
+
+    style AKS fill:#0078D4,color:#fff
+    style Network fill:#3F8624,color:#fff
+    style Security fill:#DD344C,color:#fff
+    style Monitoring fill:#FF9900,color:#fff
+    style Registry fill:#8C4FFF,color:#fff
+```
+
 ## Features
 
 - **System and User Node Pools** -- Dedicated system node pool with `CriticalAddonsOnly` taint and configurable additional user node pools via a flexible map variable.
