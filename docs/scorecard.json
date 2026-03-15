@@ -1,0 +1,64 @@
+{
+  "repo": "terraform-azure-aks",
+  "generated": "2026-03-15",
+  "scores": {
+    "documentation": 7,
+    "maintainability": 8,
+    "security": 7,
+    "observability": 5,
+    "deployability": 8,
+    "portability": 7,
+    "testability": 7,
+    "scalability": 8,
+    "reusability": 7,
+    "production_readiness": 7
+  },
+  "overall": 7.1,
+  "top_gaps": [
+    "No sub-modules for composability (monolithic structure)",
+    "Example directories lack README files",
+    "No pre-commit hook configuration",
+    "Tests exist but lack integration/end-to-end coverage",
+    "No Makefile or Taskfile for local development",
+    "No architecture diagram in documentation",
+    "No cost estimation or Infracost integration",
+    "No automated security scanning (tfsec/checkov) in CI",
+    "No observability/monitoring configuration in module",
+    "No dependency pinning beyond provider versions"
+  ],
+  "fixes_applied": [
+    "GitHub Actions CI workflow configured",
+    "Test infrastructure present (tests/ directory)",
+    "CONTRIBUTING.md present for contributor guidance",
+    "SECURITY.md present for vulnerability reporting",
+    "CODEOWNERS file established for review ownership",
+    ".editorconfig ensures consistent code formatting",
+    ".gitattributes for line ending normalization",
+    ".gitignore present for file exclusions",
+    "LICENSE clearly defined",
+    "CHANGELOG.md tracks version history"
+  ],
+  "remaining_risks": [
+    "Monolithic module may be hard to extend for specific use cases",
+    "No automated AKS upgrade testing",
+    "Example directories lack documentation",
+    "No observability stack integration"
+  ],
+  "roadmap": {
+    "30_day": [
+      "Add README files to all example directories",
+      "Add tfsec and checkov to CI pipeline",
+      "Add pre-commit hooks configuration"
+    ],
+    "60_day": [
+      "Extract node pools and networking into sub-modules",
+      "Add Terratest integration tests with assertions",
+      "Add Infracost integration for cost estimation"
+    ],
+    "90_day": [
+      "Implement automated AKS upgrade testing",
+      "Add monitoring/observability sub-module",
+      "Create architecture diagram in README"
+    ]
+  }
+}

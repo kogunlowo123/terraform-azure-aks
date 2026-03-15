@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>terraform-azure-aks | Architecture</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0c0b;color:#f5f2eb;font-family:'SF Mono','Cascadia Code','Fira Code',monospace;line-height:1.7;padding:0}
+a{color:#c8420a;text-decoration:none}
+a:hover{text-decoration:underline}
+.container{max-width:1200px;margin:0 auto;padding:2rem}
+header{background:linear-gradient(135deg,#0b0c0b 0%,#1a1b1a 100%);border-bottom:2px solid #c8420a;padding:2rem 0}
+header .container{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+h1{font-size:1.8rem;color:#f5f2eb}
+h2{font-size:1.4rem;color:#c8420a;margin:2rem 0 1rem;padding-bottom:0.5rem;border-bottom:1px solid #2a2b2a}
+h3{font-size:1.1rem;color:#f5f2eb;margin:1.5rem 0 0.75rem}
+.badge{background:#0078D4;color:#fff;padding:0.3rem 1rem;border-radius:4px;font-size:0.85rem;font-weight:600;letter-spacing:0.5px}
+.badge-type{background:#c8420a}
+.summary{background:#1a1b1a;border:1px solid #2a2b2a;border-radius:8px;padding:1.5rem;margin:1.5rem 0;font-size:0.95rem;line-height:1.8}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin:1.5rem 0}
+.card{background:#1a1b1a;border:1px solid #2a2b2a;border-radius:8px;padding:1.25rem;transition:border-color 0.2s}
+.card:hover{border-color:#c8420a}
+.card-title{font-size:0.95rem;color:#c8420a;margin-bottom:0.5rem}
+.card-value{font-size:1.3rem;color:#f5f2eb;font-weight:700}
+.card-desc{font-size:0.8rem;color:#888;margin-top:0.25rem}
+.arch-diagram{background:#1a1b1a;border:1px solid #2a2b2a;border-radius:8px;padding:2rem;margin:1.5rem 0;overflow-x:auto}
+.flow{display:flex;flex-direction:column;align-items:center;gap:1rem}
+.flow-row{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;align-items:center}
+.flow-box{background:#0b0c0b;border:2px solid #c8420a;border-radius:8px;padding:0.75rem 1.25rem;text-align:center;font-size:0.85rem;min-width:140px;position:relative}
+.flow-box.primary{border-color:#0078D4;background:#0a1628}
+.flow-box.secondary{border-color:#3F8624;background:#0a1a0a}
+.flow-box.accent{border-color:#c8420a;background:#1a0f0a}
+.flow-box.purple{border-color:#8C4FFF;background:#140a28}
+.flow-box.warning{border-color:#FF9900;background:#1a1400}
+.flow-arrow{color:#555;font-size:1.5rem}
+.flow-label{font-size:0.7rem;color:#888;margin-top:0.2rem}
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:0.85rem}
+th{background:#1a1b1a;color:#c8420a;text-align:left;padding:0.75rem;border:1px solid #2a2b2a;font-weight:600}
+td{padding:0.75rem;border:1px solid #2a2b2a;color:#f5f2eb}
+tr:nth-child(even){background:#111211}
+tr:hover{background:#1a1b1a}
+.check{color:#3F8624}
+.x{color:#DD344C}
+.checklist{list-style:none;padding:0}
+.checklist li{padding:0.4rem 0;padding-left:1.5rem;position:relative;font-size:0.9rem}
+.checklist li::before{content:"[  ]";position:absolute;left:0;color:#c8420a;font-size:0.85rem}
+code{background:#1a1b1a;padding:0.15rem 0.4rem;border-radius:3px;font-size:0.85rem;color:#c8420a}
+pre{background:#1a1b1a;border:1px solid #2a2b2a;border-radius:8px;padding:1.25rem;overflow-x:auto;font-size:0.85rem;margin:1rem 0}
+.data-flow-step{display:flex;align-items:flex-start;gap:1rem;margin:0.75rem 0}
+.step-num{background:#c8420a;color:#fff;min-width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0}
+.step-text{font-size:0.9rem}
+footer{background:#1a1b1a;border-top:2px solid #c8420a;padding:2rem 0;margin-top:3rem;text-align:center;font-size:0.8rem;color:#555}
+.section{margin-bottom:2rem}
+.tag{display:inline-block;background:#1a1b1a;border:1px solid #2a2b2a;border-radius:4px;padding:0.15rem 0.5rem;font-size:0.75rem;margin:0.1rem}
+</style>
+</head>
+<body>
+<header>
+<div class="container">
+<div>
+<h1>terraform-azure-aks</h1>
+<p style="color:#888;margin-top:0.3rem;font-size:0.9rem">Azure Kubernetes Service Module Architecture</p>
+</div>
+<div>
+<span class="badge">Azure</span>
+<span class="badge badge-type">Kubernetes</span>
+</div>
+</div>
+</header>
+
+<div class="container">
+
+<section class="section">
+<h2>Executive Summary</h2>
+<div class="summary">
+Production-grade Terraform module for deploying Azure Kubernetes Service (AKS) clusters with enterprise features. Provisions a private AKS cluster with system/user node pools across three availability zones, Azure CNI Overlay networking with Cilium dataplane, workload identity (OIDC), Microsoft Defender for Containers, Azure Policy, Key Vault CSI driver, image cleaner, and integrated ACR pull access. Designed for organizations requiring a secure, scalable, GitOps-ready Kubernetes platform on Azure.
+</div>
+</section>
+
+<section class="section">
+<h2>Overview Cards</h2>
+<div class="cards">
+<div class="card"><div class="card-title">Resources</div><div class="card-value">3</div><div class="card-desc">AKS Cluster, Node Pools, ACR Role</div></div>
+<div class="card"><div class="card-title">Variables</div><div class="card-value">21</div><div class="card-desc">6 required, 15 optional</div></div>
+<div class="card"><div class="card-title">Outputs</div><div class="card-value">9</div><div class="card-desc">Cluster IDs, FQDN, Identities</div></div>
+<div class="card"><div class="card-title">Provider</div><div class="card-value">azurerm</div><div class="card-desc">>= 3.80.0</div></div>
+<div class="card"><div class="card-title">Terraform</div><div class="card-value">>= 1.5.0</div><div class="card-desc">HCL Configuration</div></div>
+<div class="card"><div class="card-title">Network</div><div class="card-value">CNI + Cilium</div><div class="card-desc">Overlay mode, eBPF dataplane</div></div>
+</div>
+</section>
+
+<section class="section">
+<h2>Architecture Diagram</h2>
+<div class="arch-diagram">
+<div class="flow">
+<div class="flow-row">
+<div class="flow-box primary">AKS Control Plane<div class="flow-label">Private API Server</div></div>
+</div>
+<div class="flow-arrow">&#x2193;</div>
+<div class="flow-row">
+<div class="flow-box secondary">System Node Pool<div class="flow-label">AZ1/AZ2/AZ3 - Critical Addons</div></div>
+<div class="flow-box secondary">User Node Pool(s)<div class="flow-label">General / GPU / Spot</div></div>
+</div>
+<div class="flow-arrow">&#x2193;</div>
+<div class="flow-row">
+<div class="flow-box accent">Azure CNI Overlay<div class="flow-label">Cilium Network Policy + Dataplane</div></div>
+<div class="flow-box accent">VNet Subnet<div class="flow-label">vnet_subnet_id</div></div>
+</div>
+<div class="flow-arrow">&#x2193;</div>
+<div class="flow-row">
+<div class="flow-box purple">Workload Identity<div class="flow-label">OIDC Issuer</div></div>
+<div class="flow-box purple">Microsoft Defender<div class="flow-label">Threat Detection</div></div>
+<div class="flow-box purple">Azure Policy<div class="flow-label">Compliance</div></div>
+<div class="flow-box purple">Key Vault CSI<div class="flow-label">Secret Rotation</div></div>
+</div>
+<div class="flow-arrow">&#x2193;</div>
+<div class="flow-row">
+<div class="flow-box warning">Log Analytics<div class="flow-label">Container Insights / OMS</div></div>
+<div class="flow-box warning">ACR Integration<div class="flow-label">AcrPull Role Assignment</div></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<h2>Component Breakdown</h2>
+<table>
+<tr><th>Component</th><th>Resource Type</th><th>Purpose</th><th>Configuration</th></tr>
+<tr><td>AKS Cluster</td><td><code>azurerm_kubernetes_cluster</code></td><td>Managed Kubernetes control plane + default node pool</td><td>Private, Standard SKU, SystemAssigned identity</td></tr>
+<tr><td>Additional Node Pools</td><td><code>azurerm_kubernetes_cluster_node_pool</code></td><td>User workload node pools (GPU, spot, memory-optimized)</td><td>for_each map, auto-scaling, taints/labels</td></tr>
+<tr><td>ACR Pull Role</td><td><code>azurerm_role_assignment</code></td><td>Grants kubelet identity AcrPull on Container Registry</td><td>Conditional on acr_id</td></tr>
+<tr><td>Network Profile</td><td>Inline block</td><td>Azure CNI Overlay + Cilium eBPF</td><td>Pod CIDR 10.244.0.0/16, Service CIDR 10.0.0.0/16</td></tr>
+<tr><td>Workload Identity</td><td>Inline feature</td><td>OIDC-based pod identity federation</td><td>Enabled by default</td></tr>
+<tr><td>Key Vault CSI</td><td>Inline add-on</td><td>Mount Key Vault secrets into pods</td><td>Secret rotation every 2m</td></tr>
+<tr><td>Defender</td><td>Inline block</td><td>Runtime threat detection for containers</td><td>Requires Log Analytics</td></tr>
+<tr><td>Maintenance Window</td><td>Inline block</td><td>Scheduled cluster maintenance</td><td>Allowed/not-allowed windows</td></tr>
+</table>
+</section>
+
+<section class="section">
+<h2>Data Flow</h2>
+<div class="data-flow-step"><div class="step-num">1</div><div class="step-text">Developer pushes container image to Azure Container Registry (ACR).</div></div>
+<div class="data-flow-step"><div class="step-num">2</div><div class="step-text">AKS kubelet identity pulls images from ACR via AcrPull role assignment.</div></div>
+<div class="data-flow-step"><div class="step-num">3</div><div class="step-text">Pods are scheduled on system or user node pools across availability zones.</div></div>
+<div class="data-flow-step"><div class="step-num">4</div><div class="step-text">Azure CNI Overlay with Cilium routes traffic; network policies enforce microsegmentation.</div></div>
+<div class="data-flow-step"><div class="step-num">5</div><div class="step-text">Workload Identity federates pod service accounts with Azure AD for passwordless Azure resource access.</div></div>
+<div class="data-flow-step"><div class="step-num">6</div><div class="step-text">Key Vault CSI driver injects secrets directly into pod volumes with auto-rotation.</div></div>
+<div class="data-flow-step"><div class="step-num">7</div><div class="step-text">OMS Agent ships logs/metrics to Log Analytics; Defender monitors for runtime threats.</div></div>
+</section>
+
+<section class="section">
+<h2>Security Controls</h2>
+<table>
+<tr><th>Control</th><th>Implementation</th><th>Default</th></tr>
+<tr><td>Private Cluster</td><td>API server accessible only within VNet</td><td>Enabled</td></tr>
+<tr><td>RBAC</td><td>Kubernetes RBAC + Azure AD RBAC</td><td>Enabled (always on)</td></tr>
+<tr><td>Workload Identity</td><td>OIDC issuer + federated credentials</td><td>Enabled</td></tr>
+<tr><td>Network Policy</td><td>Cilium eBPF-based pod network policies</td><td>Cilium</td></tr>
+<tr><td>Microsoft Defender</td><td>Runtime threat detection, vulnerability scanning</td><td>Enabled</td></tr>
+<tr><td>Azure Policy</td><td>Enforce organizational standards on clusters</td><td>Enabled</td></tr>
+<tr><td>Key Vault Integration</td><td>CSI driver with secret rotation (2m)</td><td>Enabled</td></tr>
+<tr><td>Image Cleaner</td><td>Automatic stale image cleanup (48h)</td><td>Enabled</td></tr>
+<tr><td>API Server Access</td><td>Authorized IP ranges whitelist</td><td>Optional</td></tr>
+</table>
+</section>
+
+<section class="section">
+<h2>Industry Adaptation</h2>
+<table>
+<tr><th>Capability</th><th>Healthcare</th><th>Finance</th><th>Government</th><th>Retail</th><th>SaaS</th></tr>
+<tr><td>Private Cluster</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+<tr><td>Azure Policy</td><td class="check">&#10003; HIPAA</td><td class="check">&#10003; PCI-DSS</td><td class="check">&#10003; FedRAMP</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+<tr><td>Defender</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+<tr><td>Workload Identity</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+<tr><td>Network Policy</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+<tr><td>Multi-AZ</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+<tr><td>Audit Logging</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td>Optional</td><td>Optional</td></tr>
+</table>
+</section>
+
+<section class="section">
+<h2>Production Readiness Checklist</h2>
+<ul class="checklist">
+<li>Enable private cluster (private_cluster_enabled = true)</li>
+<li>Configure Azure AD admin group for RBAC</li>
+<li>Set authorized IP ranges for API server access</li>
+<li>Enable Microsoft Defender and Azure Policy</li>
+<li>Attach Log Analytics workspace for monitoring</li>
+<li>Enable workload identity and OIDC issuer</li>
+<li>Configure maintenance windows for planned updates</li>
+<li>Set up node pool auto-scaling with appropriate min/max</li>
+<li>Integrate ACR with AcrPull role for image pulls</li>
+<li>Enable Key Vault CSI driver for secret management</li>
+<li>Spread node pools across 3 availability zones</li>
+<li>Separate system and user node pools (CriticalAddonsOnly)</li>
+</ul>
+</section>
+
+<section class="section">
+<h2>Configuration Reference</h2>
+<table>
+<tr><th>Variable</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>cluster_name</code></td><td>string</td><td>required</td><td>Name of the AKS cluster</td></tr>
+<tr><td><code>kubernetes_version</code></td><td>string</td><td>required</td><td>Kubernetes version</td></tr>
+<tr><td><code>vnet_subnet_id</code></td><td>string</td><td>required</td><td>Subnet ID for default node pool</td></tr>
+<tr><td><code>private_cluster_enabled</code></td><td>bool</td><td>true</td><td>Enable private API server</td></tr>
+<tr><td><code>sku_tier</code></td><td>string</td><td>Standard</td><td>Free, Standard, or Premium</td></tr>
+<tr><td><code>network_policy</code></td><td>string</td><td>cilium</td><td>Network policy engine</td></tr>
+<tr><td><code>default_node_pool</code></td><td>object</td><td>required</td><td>System node pool configuration</td></tr>
+<tr><td><code>additional_node_pools</code></td><td>map(object)</td><td>{}</td><td>User node pools map</td></tr>
+<tr><td><code>enable_workload_identity</code></td><td>bool</td><td>true</td><td>Workload identity federation</td></tr>
+<tr><td><code>enable_defender</code></td><td>bool</td><td>true</td><td>Microsoft Defender for Containers</td></tr>
+<tr><td><code>acr_id</code></td><td>string</td><td>null</td><td>ACR ID for AcrPull role</td></tr>
+</table>
+</section>
+
+<section class="section">
+<h2>Deployment</h2>
+<pre>
+# Initialize
+terraform init
+
+# Plan
+terraform plan -out=tfplan \
+  -var="cluster_name=my-aks" \
+  -var="resource_group_name=rg-aks" \
+  -var="location=eastus" \
+  -var="kubernetes_version=1.29" \
+  -var="dns_prefix=myaks" \
+  -var='vnet_subnet_id=/subscriptions/.../subnets/aks'
+
+# Apply
+terraform apply tfplan
+
+# Get credentials
+az aks get-credentials --resource-group rg-aks --name my-aks
+</pre>
+</section>
+
+<section class="section">
+<h2>Links</h2>
+<p>
+<a href="https://learn.microsoft.com/en-us/azure/aks/intro-kubernetes">Azure AKS Documentation</a> |
+<a href="https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster">Terraform AKS Resource</a> |
+<a href="../README.md">Module README</a> |
+<a href="../examples/">Examples</a>
+</p>
+</section>
+
+</div>
+
+<footer>
+<div class="container">
+<p>terraform-azure-aks Architecture Document</p>
+<p>Generated on 2026-03-15 | Terraform Azure Module</p>
+</div>
+</footer>
+</body>
+</html>
