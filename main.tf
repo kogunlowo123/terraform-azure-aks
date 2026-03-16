@@ -15,19 +15,19 @@ resource "azurerm_kubernetes_cluster" "this" {
   image_cleaner_interval_hours      = var.enable_image_cleaner ? 48 : null
   role_based_access_control_enabled = true
 
-  tags = local.default_tags
+  tags = var.tags
 
   default_node_pool {
     name                         = var.default_node_pool.name
     vm_size                      = var.default_node_pool.vm_size
-    node_count                   = local.enable_auto_scaling ? null : var.default_node_pool.node_count
-    min_count                    = local.enable_auto_scaling ? var.default_node_pool.min_count : null
-    max_count                    = local.enable_auto_scaling ? var.default_node_pool.max_count : null
+    node_count                   = var.default_node_pool.min_count != null && var.default_node_pool.max_count != null ? null : var.default_node_pool.node_count
+    min_count                    = var.default_node_pool.min_count != null && var.default_node_pool.max_count != null ? var.default_node_pool.min_count : null
+    max_count                    = var.default_node_pool.min_count != null && var.default_node_pool.max_count != null ? var.default_node_pool.max_count : null
     os_disk_size_gb              = var.default_node_pool.os_disk_size_gb
     os_disk_type                 = var.default_node_pool.os_disk_type
     zones                        = var.default_node_pool.zones
     only_critical_addons_enabled = var.default_node_pool.only_critical_addons_enabled
-    enable_auto_scaling          = local.enable_auto_scaling
+    enable_auto_scaling          = var.default_node_pool.min_count != null && var.default_node_pool.max_count != null
     vnet_subnet_id               = var.vnet_subnet_id
     temporary_name_for_rotation  = "${var.default_node_pool.name}tmp"
 
@@ -124,11 +124,12 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
 }
 
-# -----------------------------------------------------------------------------
-# Additional (User) Node Pools
-# -----------------------------------------------------------------------------
 resource "azurerm_kubernetes_cluster_node_pool" "this" {
-  for_each = local.additional_node_pools
+  for_each = {
+    for k, v in var.additional_node_pools : k => merge(v, {
+      vnet_subnet_id = coalesce(v.vnet_subnet_id, var.vnet_subnet_id)
+    })
+  }
 
   name                  = each.key
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
@@ -148,7 +149,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   node_labels           = each.value.node_labels
   node_taints           = each.value.node_taints
 
-  tags = merge(local.default_tags, each.value.tags)
+  tags = merge(var.tags, each.value.tags)
 
   upgrade_settings {
     max_surge = "33%"
@@ -161,9 +162,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   }
 }
 
-# -----------------------------------------------------------------------------
-# ACR Pull Role Assignment
-# -----------------------------------------------------------------------------
 resource "azurerm_role_assignment" "acr_pull" {
   count = var.acr_id != null ? 1 : 0
 

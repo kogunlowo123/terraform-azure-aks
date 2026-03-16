@@ -9,7 +9,7 @@ output "cluster_fqdn" {
 }
 
 output "cluster_private_fqdn" {
-  description = "The private FQDN of the AKS cluster when private cluster is enabled."
+  description = "The private FQDN of the AKS cluster."
   value       = azurerm_kubernetes_cluster.this.private_fqdn
 }
 
@@ -25,12 +25,12 @@ output "oidc_issuer_url" {
 }
 
 output "node_resource_group" {
-  description = "The name of the resource group containing the AKS node pool resources."
+  description = "The resource group containing AKS node pool resources."
   value       = azurerm_kubernetes_cluster.this.node_resource_group
 }
 
 output "kubelet_identity" {
-  description = "The kubelet managed identity assigned to the AKS cluster."
+  description = "The kubelet managed identity of the AKS cluster."
   value = {
     client_id                 = azurerm_kubernetes_cluster.this.kubelet_identity[0].client_id
     object_id                 = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
