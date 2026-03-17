@@ -1,3 +1,9 @@
+![Terraform](https://img.shields.io/badge/Terraform-%3E%3D1.5-blueviolet?logo=terraform)
+![Azure](https://img.shields.io/badge/Azure-0078D4?logo=microsoftazure&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
+![CI](https://img.shields.io/github/actions/workflow/status/kogunlowo123/terraform-azure-aks/terraform-ci.yml?label=CI)
+![GitHub release](https://img.shields.io/github/v/release/kogunlowo123/terraform-azure-aks)
+
 # terraform-azure-aks
 
 Production-grade Terraform module for deploying Azure Kubernetes Service (AKS) clusters with enterprise features including system/user node pools, workload identity, Azure CNI Overlay networking, Microsoft Defender, Azure Policy, and GitOps-ready configuration.
